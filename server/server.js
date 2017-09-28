@@ -7,6 +7,7 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
 var app = express();
+const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json()); //middleware
 
@@ -47,8 +48,26 @@ app.get('/todos/:id', (req, res) => {
   })
 });
 
-app.listen(3000, () => {
-  console.log('Starting on port 3000');
+app.delete('/todos/:id', (req, res) => {
+  var id = req.params.id;
+  if(!ObjectID.isValid(id)) {
+    return res.status(404).send('ID is not valid');
+  }
+
+  Todo.findByIdAndRemove(id).then((todos) => {
+    if (!todos) {
+      return res.status(404).send();
+    }
+    res.send(todos)
+  }, (err) => {
+    res.status(404).send(err);
+  })
 });
+
+app.listen(port, () => {
+  console.log(`Starting on port ${port}`);
+});
+
+
 
 module.exports = {app};
