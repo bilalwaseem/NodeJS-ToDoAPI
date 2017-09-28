@@ -5,9 +5,22 @@ var expect = chai.expect;
 var {app} = require('./../server'); //equal to var app = require("./../server").app
 var {Todo} = require('./../models/todo');
 
-beforeEach((done) => {
-  Todo.remove({}).then(() => done()); //removes all docs/items
+const todos = [{
+  text: 'first todo'
+}, {
+  text: '2nd todo'
+}];
+
+beforeEach((done) => { //for testing post
+  Todo.remove({}).then(() => {  //removes all docs/items
+    return Todo.insertMany(todos);
+  }).then(() => done());
 });
+
+
+// beforeEach((done) => { //for testing post
+//   Todo.remove({}).then(() => done()); //removes all docs/items
+// });
 
 describe('POST /todos', () => {
   it('should create a new todo', (done) => {
@@ -19,14 +32,13 @@ describe('POST /todos', () => {
       .expect(200) //expect to be 200 status
       .expect((res) => {
          expect(res.body.text).to.equal(text);
-         console.log(res.body.text);
       })
       .end((err, res) => {
         if (err) {
           return done(err);
         }
 
-        Todo.find().then((todos) => {
+        Todo.find({text}).then((todos) => {
           expect(todos.length).to.equal(1);
           expect(todos[0].text).to.equal(text);
           done();
@@ -46,9 +58,21 @@ describe('POST /todos', () => {
         }
 
         Todo.find().then((todos) => {
-          expect(todos.length).to.equal(0);
+          expect(todos.length).to.equal(2);
           done();
         }).catch((e) => done(e));
       });
   });
 });
+
+describe('GET /todos', () => {
+  it('should get all todos', (done) => {
+    request(app)
+      .get('/todos')
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todos.length).to.equal(2);
+      })
+      .end(done);
+  })
+})
